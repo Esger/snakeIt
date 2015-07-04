@@ -91,12 +91,23 @@ html, body{
 .tile.error{
 	background-color: red;
 }
-#theScore{
+#theScore, #menu{
 	position: absolute;
-	bottom: 5px;
 	height: 18px;
 	text-align: center;
 	width: calc(100% - 60px);
+}
+#theScore{
+	bottom: 5px;
+}
+#menu{
+	top: 7px;
+	margin-top: 0;
+}
+#menu a{
+	font:bold 18px/18px "Source Code Pro", "Courier New", Courier, monospace;
+	color: #333;
+	text-decoration: none;
 }
 h1, h2, h3{
 	font:bold 18px/24px "Source Code Pro", "Courier New", Courier, monospace;

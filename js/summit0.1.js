@@ -34,6 +34,7 @@ $(function () {
 						this.tId = tId;
 						this.x = x;
 						this.y = y;
+						this.inTrail = false;
 					},
 			
 			fillBoard : function(){
@@ -52,6 +53,9 @@ $(function () {
 					}
 					this.theTiles[y] = row;
 					//console.log(this.theTiles[y]);
+				}
+				if ($.cookie('score')) {
+					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
 				}
 			},
 			
@@ -100,7 +104,7 @@ $(function () {
 			addToTrail : function(target){
 				var prevTile,
 					tile = theBoard.getTileData(target.id),
-					newTrailTile = new theBoard.tile(tile.tChar, tile.tId, tile.x, tile.y),
+					newTrailTile = new theBoard.tile(tile.tChar, tile.tId, tile.x, tile.y, true),
 					adjacent = function(t) {
 						var dx, dy,
 							trailLength = theBoard.trail.length;
@@ -131,6 +135,7 @@ $(function () {
 						}
 						return true;
 					};
+				theBoard.theTiles[newTrailTile.y][newTrailTile.x].inTrail = true;
 				if (adjacent(target) && isNewTile(target)) {
 					this.trail.push(newTrailTile);
 					return true;
@@ -161,9 +166,12 @@ $(function () {
 								}
 								return false;
 							};
-						if (hasNumbers(parts[0]) && hasNumbers(parts[1])) {
-							return ((parts.length === 2) && (eval(parts[0]) === eval(parts[1])));
-						} else return false;
+						if (str.length > 2){
+							if (hasNumbers(parts[0]) && hasNumbers(parts[1])) {
+								return ((parts.length === 2) && (eval(parts[0]) === eval(parts[1])));
+							}
+						}
+						return false;
 					},
 					removeTiles = function(){
 						var i;
@@ -177,7 +185,7 @@ $(function () {
 							blinkRed = function(){
 								var i;
 								for (i=0; i<oldTrail.length; i+=1) {
-									$('#'+oldTrail[i].tId).removeClass('error');
+									$('#'+oldTrail[i].tId).removeClass('error inTrail');
 								}
 							};
 						for (i=0; i<theBoard.trail.length; i+=1) {
@@ -222,11 +230,29 @@ $(function () {
 						}
 					},
 					addScore = function(){
-						var multiplier = Math.pow(2, (theBoard.trail.length - 3));
+						var high, multiplier = Math.pow(2, (theBoard.trail.length - 3));
 							theBoard.score += theBoard.trail.length * multiplier;
-							$('#theScore').text(theBoard.score);
+							$('#yourScore').text(theBoard.score);
+							high = $.cookie('score');
+							if (!high || (theBoard.score > high)) {
+								$.cookie('score',theBoard.score);
+							}
 					},
 					refillBoard = function(){
+						var $revive;
+						for (y = 1; y <= this.height; y+=1) {
+							for (x = 1; x <= this.width; x+=1) {
+								if ($theBoard.theTiles[y][x].inTrail) {
+									$('#'+$theBoard.theTiles[y][x].tId).css({
+										top: ($theBoard.theTiles[y][x].y - theBoard.posOffset) * this.tileSize + 'px'
+									});
+								}
+							}
+						}
+
+						console.log($revive);
+						$('.tile').removeClass('inTrail');
+
 					};
 				
 				this.$theBoard.off('touchmove', '.tile').on('touchmove', '.tile', function(e){
@@ -265,12 +291,11 @@ $(function () {
 						putTrailAtTop();
 						dropTiles();
 						addScore();
-						refillBoard();
+						setTimeout(refillBoard,2000);
 					} else {
 						blinkTiles();
 					}
 					theBoard.trail = [];
-					$('.tile').removeClass('inTrail');
 					down = false;
 				});
 				
@@ -278,10 +303,16 @@ $(function () {
 					down = false;
 				});
 				
-				$(document).off('click').on(this.trackEnd, function(e){
+				$(document).off('click').on('click', '.tile', function(e){
 					e.stopPropagation();
 					e.preventDefault();
 					return false;
+				});
+				
+				$('#restart').on('click', function(){
+					theBoard.$theBoard.empty();
+					theBoard.fillBoard();
+					theBoard.drawNewBoard();
 				});
 
 			},
