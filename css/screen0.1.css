@@ -26,6 +26,9 @@ html, body{
 .hidden{
 	display:none;
 }
+.noPush{
+	margin: 0 !important;
+}
 #container{
 	width: 463px;
 	position:relative;
@@ -88,6 +91,13 @@ html, body{
 .tile.error{
 	background-color: red;
 }
+#theScore{
+	position: absolute;
+	bottom: 5px;
+	height: 18px;
+	text-align: center;
+	width: calc(100% - 60px);
+}
 h1, h2, h3{
 	font:bold 18px/24px "Source Code Pro", "Courier New", Courier, monospace;
 	font-weight: 900;
@@ -98,13 +108,14 @@ h1, h2, h3{
 }
 h1{
 	font:normal 36px/36px "Source Code Pro", "Courier New", Courier, monospace;
-	text-transform: uppercase;
-	letter-spacing: 1px;
 	margin: 10px 15px 10px 15px;
 }
 h3{
 	font-size: 18px;
+	text-transform: uppercase;
+	letter-spacing: 1px;
 	line-height: 18px;
+	color: white;
 }
 p{
 	margin-bottom:8px;

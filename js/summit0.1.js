@@ -19,6 +19,7 @@ $(function () {
 			trackEnd : 'mouseup touchend',
 			trail : [],
 			empty : [],
+			score : 0,
 			
 			setBoardSize : function(){
 				var w = 463;
@@ -220,30 +221,11 @@ $(function () {
 							}
 						}
 					},
-					//dropTiles = function(){
-					//	var i,j,x,y,thisX,thisY,thisId,trailXvals = '';
-					//	for (i=0; i<theBoard.trail.length; i+=1) {
-					//		thisX = theBoard.trail[i].x;
-					//		thisY = theBoard.trail[i].y;
-					//		for (j=1; j<thisY; j+=1) {
-					//			thisId = theBoard.theTiles[j][thisX].tId;
-					//			theBoard.theTiles[j][thisX].y+=1;
-					//		}
-					//	}
-					//	for (i=0; i<theBoard.trail.length; i+=1) {
-					//		if (trailXvals.indexOf(theBoard.trail[i].x) < 0) {
-					//			trailXvals += theBoard.trail[i].x;
-					//		}
-					//	}
-					//	trailXvals = trailXvals.split('');
-					//	for (i=0; i<trailXvals.length; i+=1) {
-					//		x = trailXvals[i];
-					//		for (y=1; y<lowestInTrail; y+=1) {
-					//			thisId = theBoard.theTiles[y][x].tId;
-					//			$('#'+thisId).animate({top:"+="+theBoard.tileSize},600,'easeOutBounce');
-					//		}
-					//	}
-					//},
+					addScore = function(){
+						var multiplier = Math.pow(2, (theBoard.trail.length - 3));
+							theBoard.score += theBoard.trail.length * multiplier;
+							$('#theScore').text(theBoard.score);
+					},
 					refillBoard = function(){
 					};
 				
@@ -282,6 +264,7 @@ $(function () {
 						removeTiles();
 						putTrailAtTop();
 						dropTiles();
+						addScore();
 						refillBoard();
 					} else {
 						blinkTiles();
