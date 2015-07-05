@@ -4,7 +4,6 @@ $(function () {
 
 	var theBoard = {
 			$theBoard : $('#theBoard'),
-			$tile : $('<div class="tile"></div>'),
 			width : 9,
 			height : 9,
 			tileSize : 50,
@@ -30,62 +29,49 @@ $(function () {
 			},
 			
 			tile : function(tChar, tId, x, y) {
-						this.tChar = tChar;
-						this.tId = tId;
-						this.x = x;
-						this.y = y;
-						this.inTrail = false;
-					},
+				var aTile, theChar;
+				switch (tChar) {
+					case '-' : theChar = ('&ndash;');
+					break;
+					case '*' : theChar = ('&times;');
+					break;
+					default : theChar = tChar;
+				}
+				aTile = $('<div id="tile_'+tId+'" class="tile offBoard" data-x="'+x+'" data-y="'+y+'" data-char="'+tChar+'" style="display:none">'+theChar+'</div>');
+				aTile.css({
+					left : (x - theBoard.posOffset) * this.tileSize + 'px',
+					top : -theBoard.posOffset * this.tileSize + 'px'
+				});
+				return aTile;
+			},
 			
 			fillBoard : function(){
 				var chars = theBoard.numberChars.concat(theBoard.operatorChars),
 					thisChar,
 					thisTile,
-					row,
 					x, y;
+				theBoard.$theBoard.empty();
 				for (y = 1; y <= this.height; y+=1) {
-					row = [];
 					for (x = 1; x <= this.width; x+=1) {
 						thisChar = chars[Math.ceil(Math.random()*chars.length)-1];
-						thisTile = new theBoard.tile(thisChar, 'tile_'+this.tileCount, x, y);
+						thisTile = theBoard.tile(thisChar, this.tileCount, x, y);
+						theBoard.$theBoard.append(thisTile);
 						this.tileCount+=1;
-						row[x] = thisTile;
 					}
-					this.theTiles[y] = row;
-					//console.log(this.theTiles[y]);
 				}
 				if ($.cookie('score')) {
 					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
 				}
 			},
-			
-			enhanceChars : function(){
-				var x, y;
-				for (y = 1; y <= theBoard.height; y+=1) {
-					for (x = 1; x <= theBoard.width; x+=1) {
-						switch (theBoard.theTiles[y][x].tChar) {
-							case '-' : $('#'+theBoard.theTiles[y][x].tId).html('&ndash;');
-							break;
-							case '*' : $('#'+theBoard.theTiles[y][x].tId).html('&times;');
-							break;
-						}
-					}
-				}
-			},
-			
-			drawNewBoard : function(callback){
-				var x, y;
-				for (y = 1; y <= this.height; y+=1) {
-					for (x = 1; x <= this.width; x+=1) {
-						this.$theBoard.append(this.$tile.clone().css({
-							left : (x - theBoard.posOffset) * this.tileSize + 'px',
-							top : (y - theBoard.posOffset) * this.tileSize + 'px'
-						}).text(this.theTiles[y][x].tChar).attr('id',this.theTiles[y][x].tId));
-					}
-				}
-				if (typeof(callback) === 'function') {
-					callback();
-				}
+						
+			dropTiles : function(){
+				var $tiles = $('.offBoard'),
+					dropTime;
+				$tiles.each(function(){
+					var $this = $(this).show(0);
+					dropTime = 300 + Math.random() * 300;
+					$this.animate({top:"+="+($this.data('y') * theBoard.tileSize)},dropTime,'easeOutBounce').removeClass('offBoard');
+				});	
 			},
 			
 			getTileData : function(id){
@@ -102,16 +88,15 @@ $(function () {
 			},
 			
 			addToTrail : function(target){
-				var prevTile,
-					tile = theBoard.getTileData(target.id),
-					newTrailTile = new theBoard.tile(tile.tChar, tile.tId, tile.x, tile.y, true),
-					adjacent = function(t) {
+				var $prevTile,
+					$tile = $('#'+target.id),
+					adjacent = function($t) {
 						var dx, dy,
 							trailLength = theBoard.trail.length;
 						if (trailLength > 0) {
-							prevTile = theBoard.trail[trailLength-1];
-							dx = Math.abs(newTrailTile.x - prevTile.x);
-							dy = Math.abs(newTrailTile.y - prevTile.y);
+							$prevTile = theBoard.trail[trailLength-1];
+							dx = Math.abs($t.data('x') - $prevTile.data('x'));
+							dy = Math.abs($t.data('y') - $prevTile.data('y'));
 							return (dx < 2) && (dy < 2) && ((dx > 0) || (dy > 0));
 						} else {
 							return true;
@@ -122,11 +107,11 @@ $(function () {
 							i, j, rl, removeFromTrail = [];
 						if (trailLength > 1) {
 							for (i=0; i<trailLength; i+=1) {
-								if (theBoard.trail[i].tId === t.id) {
+								if (theBoard.trail[i][0].id === t.id) {
 									removeFromTrail = theBoard.trail.splice(i+1, trailLength-i-1);
 									rl = removeFromTrail.length;
 									for (j=0; j<rl; j+=1) {
-										$('#'+removeFromTrail[j].tId).removeClass('inTrail');
+										$('#'+removeFromTrail[j][0].id).removeClass('inTrail');
 									}
 									//console.log(theBoard.trail);
 									return false;
@@ -135,9 +120,10 @@ $(function () {
 						}
 						return true;
 					};
-				theBoard.theTiles[newTrailTile.y][newTrailTile.x].inTrail = true;
-				if (adjacent(target) && isNewTile(target)) {
-					this.trail.push(newTrailTile);
+				if (/*adjacent($tile) && isNewTile($tile) ||*/ true) {
+					$tile.addClass('inTrail');
+					this.trail.push($tile.clone());
+					console.log(this.trail);
 					return true;
 				} else {
 					return false;
@@ -255,72 +241,64 @@ $(function () {
 
 					};
 				
-				this.$theBoard.off('touchmove', '.tile').on('touchmove', '.tile', function(e){
-					var touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
-					i+=1;
-					e.preventDefault();
-					console.log(i);
-					if (down && (i > 10)) {
-						console.log(touch);
-						i = 0;
-						if (theBoard.addToTrail(document.elementFromPoint(touch.pageX,touch.pageY))) {
-							$(touch.target).addClass('inTrail');
-						}
-					}
-				});
-				
-				this.$theBoard.off(this.trackStart, '.tile').on(this.trackStart, '.tile', function(e){
-					$(e.target).addClass('inTrail');
-					theBoard.addToTrail(e.target);
+				theBoard.$theBoard.off(this.trackStart, '.tile').on(this.trackStart, '.tile', function(e){
 					down = true;
+					theBoard.addToTrail(e.target);
 				});
 				
-				this.$theBoard.off('mouseenter', '.tile').on(this.trackEnter, '.tile', function(e){
+				//this.$theBoard.off('touchmove', '.tile').on('touchmove', '.tile', function(e){
+				//	var touch = e.originalEvent.touches[0] || e.originalEvent.changedTouches[0];
+				//	i+=1;
+				//	e.preventDefault();
+				//	console.log(i);
+				//	if (down && (i > 10)) {
+				//		console.log(touch);
+				//		i = 0;
+				//		if (theBoard.addToTrail(document.elementFromPoint(touch.pageX,touch.pageY))) {
+				//			$(touch.target).addClass('inTrail');
+				//		}
+				//	}
+				//});
+				
+				theBoard.$theBoard.off('mouseenter', '.tile').on('mouseenter', '.tile', function(e){
+					console.log(e.target);
 					if (down) {
-						if (theBoard.addToTrail(e.target)) {
-							$(e.target).addClass('inTrail');
-						}
+						theBoard.addToTrail(e.target);
 					}
 				});
 				
-				this.$theBoard.off(this.trackEnd).on(this.trackEnd, function(e){
-					var trailString = theBoard.getTrailString();
-					console.log(trailString);
-					if (correctString(trailString)) {
-						removeTiles();
-						putTrailAtTop();
-						dropTiles();
-						addScore();
-						setTimeout(refillBoard,2000);
-					} else {
-						blinkTiles();
-					}
-					theBoard.trail = [];
-					down = false;
-				});
+				//theBoard.$theBoard.off(this.trackEnd).on(this.trackEnd, function(e){
+				//	var trailString = theBoard.getTrailString();
+				//	down = false;
+				//	console.log(trailString);
+				//	if (correctString(trailString)) {
+				//		removeTiles();
+				//		putTrailAtTop();
+				//		dropTiles();
+				//		addScore();
+				//		setTimeout(refillBoard,2000);
+				//	} else {
+				//		blinkTiles();
+				//	}
+				//	theBoard.trail = [];
+				//});
 				
-				$(document).off(this.trackEnd).on(this.trackEnd, function(){
-					down = false;
-				});
+				//$(document).off('click').on('click', '.tile', function(e){
+				//	e.stopPropagation();
+				//	e.preventDefault();
+				//	return false;
+				//});
 				
-				$(document).off('click').on('click', '.tile', function(e){
-					e.stopPropagation();
-					e.preventDefault();
-					return false;
-				});
-				
-				$('#restart').on('click', function(){
-					theBoard.$theBoard.empty();
-					theBoard.fillBoard();
-					theBoard.drawNewBoard();
-				});
 
 			},
 			initBoard : function(){
 				this.setBoardSize();
 				this.fillBoard();
-				setTimeout(this.enhanceChars,0); //werkt nog niet
-				this.drawNewBoard();
+				this.dropTiles();
+				$('#restart').on('click', function(){
+					theBoard.fillBoard();
+					theBoard.dropTiles();
+				});
 			}
 			
 		};
