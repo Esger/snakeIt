@@ -13,7 +13,8 @@ $(function () {
 			posOffset : 0.8,
 			maxNumber : 9,
 			tileCount : 1,
-			numberChars : ['0','1','2','3','4','5','6','7','8','9','0','1','2','3','4','5','6','7','8','9'],
+			// Geen 0 want dan kun je 0*56789036543458987=0 doen -> vette score
+			numberChars : ['1','2','3','4','5','6','7','8','9','1','2','3','4','5','6','7','8','9'],
 			operatorChars : ['*','+','+','-','-','=','=','='],
 			allChars : function(){
 				return theBoard.numberChars.concat(theBoard.operatorChars);
@@ -34,7 +35,7 @@ $(function () {
 			},
 			
 			randomChar : function() {
-				var all = theBoard.allChars();
+				var all = this.allChars();
 				return all[Math.ceil(Math.random()*all.length)-1];
 			},
 
@@ -49,8 +50,8 @@ $(function () {
 				}
 				aTile = $('<a id="tile_'+tId+'" class="tile offBoard" data-x="'+x+'" data-y="'+y+'" data-char="'+tChar+'" style="display:none">'+theChar+'</a>');
 				aTile.css({
-					left : (x - theBoard.posOffset) * this.tileSize + 'px',
-					top : -theBoard.posOffset * this.tileSize + 'px'
+					left : (x - this.posOffset) * this.tileSize + 'px',
+					top : - this.posOffset * this.tileSize + 'px'
 				});
 				return aTile;
 			},
@@ -68,6 +69,7 @@ $(function () {
 						this.tileCount+=1;
 					}
 				}
+				this.score = 0;
 				if ($.cookie('score')) {
 					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
 				} else {
@@ -101,8 +103,8 @@ $(function () {
 							trailLength = theBoard.trail.length;
 						if (trailLength > 0) {
 							$prevTile = theBoard.trail[trailLength-1];
-							dx = Math.abs(parseInt($t.data('x'),10) - parseInt($prevTile.data('x'),10));
-							dy = Math.abs(parseInt($t.data('y'),10) - parseInt($prevTile.data('y'),10));
+							dx = Math.abs(parseInt($t.attr('data-x'),10) - parseInt($prevTile.attr('data-x'),10));
+							dy = Math.abs(parseInt($t.attr('data-y'),10) - parseInt($prevTile.attr('data-y'),10));
 							return (dx < 2) && (dy < 2) && ((dx > 0) || (dy > 0));
 						} else {
 							return true;
@@ -139,17 +141,17 @@ $(function () {
 			getTrailString : function(){
 				var trailLength = this.trail.length,
 					i, tileString = '';
-				console.log(this.trail);
+				//console.log(this.trail);
 				for (i = 0; i < trailLength; i+=1) {
-					tileString += $(this.trail[i]).data('char');
+					tileString += $(this.trail[i]).attr('data-char');
 				}
 				return tileString;
 			},
 
 			correctString : function(str){
-				var	patt = /([\-+]?\d+([\-\+\*]\d)*){1}[=]([\-+]?\d+([\-\+\*]\d)*){1}/g,
+				var	patt = /([\-+]?\d+([\-\+\*]\d)*){1}([=]([\-+]?\d+([\-\+\*]\d)*)){1}$/g,
 					parts = str.split('=');
-				if (patt.test(str)) {
+				if (patt.test(str) && (parts.length === 2)) {
 					return (eval(parts[0]) === eval(parts[1]));
 				}
 				return false;
@@ -176,7 +178,7 @@ $(function () {
 						top : -theBoard.tileSize
 					});
 					$this.attr('data-char',theBoard.randomChar());
-					$this.html($this.data('char'));
+					$this.html($this.attr('data-char'));
 				});
 			},
 			
@@ -185,7 +187,7 @@ $(function () {
 					sinkAllAbove = function(emptyX,emptyY) {
 						$('[data-x='+emptyX+']:not(.offBoard)').each(function(){
 							var $this = $(this), thisY;
-							if (parseInt($this.data('y'),10) < emptyY) {
+							if (parseInt($this.attr('data-y'),10) < emptyY) {
 								thisY = parseInt($this.attr('data-y'), 10);
 								$this.attr('data-y', thisY + 1);
 								$this.addClass('toSink');
@@ -194,7 +196,7 @@ $(function () {
 						});
 					};
 				$empty.each(function(){
-					sinkAllAbove($(this).data('x'),$(this).data('y'));
+					sinkAllAbove($(this).attr('data-x'),$(this).attr('data-y'));
 				});
 				theBoard.dropTiles('toSink');				
 			},
@@ -211,7 +213,7 @@ $(function () {
 					};
 				// Get columns from last trail
 				for (i=0; i<$toDrop.length; i+=1) {
-					x = $toDrop.eq(i).data('x');
+					x = $toDrop.eq(i).attr('data-x');
 					if (colums.indexOf(x) === -1) colums+=x+'|';
 				}
 				// Get tiles left in columns from trail
@@ -225,7 +227,7 @@ $(function () {
 				for (i in empty) {
 					setYdata(empty[i]);
 				}
-				//console.log($('.offBoard').data('y'));
+				//console.log($('.offBoard').attr('data-y'));
 				this.dropTiles('offBoard');
 			},
 
@@ -252,7 +254,6 @@ $(function () {
 					this.blinkTiles();
 				}
 				this.trail = [];
-				this.score = 0;
 			},
 
 			handleTrail : function(){
@@ -285,6 +286,6 @@ $(function () {
 });
 
 /*
-- Trail van 3 is kortst; 1 pt per blokje
+- 
 - Hoe sneller je zetten hoe hoger je score
 */
