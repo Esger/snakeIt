@@ -38,9 +38,8 @@ $(function () {
 				var all = this.allChars();
 				return all[Math.ceil(Math.random()*all.length)-1];
 			},
-
-			newTile : function(tChar, tId, x, y) {
-				var aTile, theChar;
+			
+			convertChar : function(tChar){
 				switch (tChar) {
 					case '-' : theChar = ('&ndash;');
 					break;
@@ -48,6 +47,11 @@ $(function () {
 					break;
 					default : theChar = tChar;
 				}
+				return theChar;
+			},
+
+			newTile : function(tChar, tId, x, y) {
+				var aTile, theChar = this.convertChar(tChar);
 				aTile = $('<a id="tile_'+tId+'" class="tile offBoard" data-x="'+x+'" data-y="'+y+'" data-char="'+tChar+'" style="display:none">'+theChar+'</a>');
 				aTile.css({
 					left : (x - this.posOffset) * this.tileSize + 'px',
@@ -178,7 +182,7 @@ $(function () {
 						top : -theBoard.tileSize
 					});
 					$this.attr('data-char',theBoard.randomChar());
-					$this.html($this.attr('data-char'));
+					$this.html(theBoard.convertChar($this.attr('data-char')));
 				});
 			},
 			
