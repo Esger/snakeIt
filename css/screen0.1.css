@@ -85,6 +85,10 @@ html, body{
   -moz-border-radius: 10px;
   border-radius: 10px;
 }
+.tile.number{
+	background-color: lavender;
+	text-shadow: 0px 1px 1px #fff;
+}
 .tile.inTrail{
 	background-color: gold;
 }

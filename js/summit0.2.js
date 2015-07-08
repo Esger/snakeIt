@@ -15,13 +15,20 @@ $(function () {
 			numberChars : ['1','2','3','4','5','6','7','8','9','1','2','3','4','5','6','7','8','9'],
 			level1Chars : ['+','+','=','='],
 			level2Chars : ['-','-','='],
-			level3Chars : ['*'],
+			level3Chars : ['*','*'],
+			level4Chars : ['/','/','='],
 			allChars : function(){
 				switch (this.level) {
-					case 1 :  return this.numberChars.concat(this.level1Chars);
-					case 2 :  return this.numberChars.concat(this.level1Chars,this.level2Chars);
-					case 3 :  return this.numberChars.concat(this.level1Chars,this.level2Chars,this.level3Chars);
-					default : return this.numberChars.concat(this.level1Chars);
+					case 1 :
+						return this.numberChars.concat(this.level1Chars);
+					case 2 :
+						return this.numberChars.concat(this.level1Chars,this.level2Chars);
+					case 3 :
+						return this.numberChars.concat(this.level1Chars,this.level2Chars,this.level3Chars);
+					case 4 :
+						return this.numberChars.concat(this.level1Chars,this.level2Chars,this.level3Chars,this.level4Chars);
+					default :
+						return this.numberChars.concat(this.level1Chars,this.level2Chars,this.level3Chars,this.level4Chars);
 				}
 			},
 			level : 1,
@@ -52,6 +59,8 @@ $(function () {
 					break;
 					case '*' : theChar = ('&times;');
 					break;
+					case '/' : theChar = ('<b>:</b>');
+					break;
 					default : theChar = tChar;
 				}
 				return theChar;
@@ -64,26 +73,29 @@ $(function () {
 				return atile;
 			},
 
-			newTile : function(tChar, tId, x, y) {
-				var aTile, theChar = this.convertChar(tChar);
-				aTile = $('<a id="tile_'+tId+'" class="tile offBoard" data-x="'+x+'" data-y="'+y+'" data-char="'+tChar+'" style="display:none">'+theChar+'</a>');
+			newTile : function(tId, x, y) {
+				var aTile,
+					aChar = this.randomChar(),
+					theChar = this.convertChar(aChar);
+				aTile = $('<a id="tile_'+tId+'" class="tile offBoard" data-x="'+x+'" data-y="'+y+'" data-char="'+aChar+'" style="display:none">'+theChar+'</a>');
 				aTile.css({
 					left : (x - this.posOffset) * this.tileSize + 'px',
 					top : - this.posOffset * this.tileSize + 'px'
 				});
+				if (this.numberChars.indexOf(aChar) > -1) {
+					aTile.addClass('number');
+				}
 				//aTile = this.updateTitle(aTile);
 				return aTile;
 			},
 
 			fillBoard : function(){
-				var thisChar,
-					thisTile,
+				var thisTile,
 					x, y;
 				this.$theBoard.empty();
 				for (y = 1; y <= this.height; y+=1) {
 					for (x = 1; x <= this.width; x+=1) {
-						thisChar = this.randomChar();
-						thisTile = this.newTile(thisChar, this.tileCount, x, y);
+						thisTile = this.newTile(this.tileCount, x, y);
 						this.$theBoard.append(thisTile);
 						this.tileCount+=1;
 					}
@@ -93,9 +105,9 @@ $(function () {
 				this.score = 0;
 				this.level = 1;
 				if ($.cookie('score')) {
-					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
+					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>'+' trail:<span class="trail"></span>');
 				} else {
-					$('#theScore').html('High:0 score:<span id="yourScore">0</span>');
+					$('#theScore').html('High:0 score:<span id="yourScore">0</span>'+' trail:<span class="trail"></span>');
 				}
 			},
 
@@ -158,6 +170,7 @@ $(function () {
 				if (adjacent($tile) && isNewTile(target)) {
 					$tile.addClass('inTrail');
 					this.trail.push($tile.clone());
+					$('.trail').text(this.getScore());
 					//console.log(this.trail);
 					return true;
 				} else {
@@ -206,6 +219,11 @@ $(function () {
 					});
 					$this.attr('data-char',theBoard.randomChar());
 					$this.html(theBoard.convertChar($this.attr('data-char')));
+					if (theBoard.numberChars.indexOf($this.attr('data-char')) > -1) {
+						$this.addClass('number');
+					} else {
+						$this.removeClass('number');
+					}
 					//$this = theBoard.updateTitle($this);
 				});
 			},
@@ -270,17 +288,25 @@ $(function () {
 			},
 			
 			levelUp : function(){
-				if (this.score > 200) {
+				if (this.score > 400) {
+					this.level = 4;
+				} else if (this.score > 200) {
 					this.level = 3;
 				} else if (this.score > 100) {
 					this.level = 2;
 				}
 			},
+			
+			getScore : function(){
+				var score = this.trail.length,
+					multiplier = Math.pow(2, (this.trail.length - 3));
+					score = score * multiplier;
+				return (score > 2) ? score : 0;
+			},
 
 			addScore : function(){
-				var high,
-					multiplier = Math.pow(2, (this.trail.length - 3));
-				this.score += this.trail.length * multiplier;
+				var high;
+				this.score += this.getScore();
 				this.levelUp();
 				$('#yourScore').text(this.score);
 				high = $.cookie('score');
@@ -302,10 +328,12 @@ $(function () {
 					this.blinkTiles();
 				}
 				this.trail = [];
+				$('.trail').text(this.getScore());
 			},
 
 			handleTrail : function(){
 				theBoard.$theBoard.on('mousedown', '.tile', function(e){
+					if (e.preventDefault) e.preventDefault();
 					theBoard.addToTrail(e.target);
 					theBoard.$theBoard.on('mouseenter', '.tile', function(e){
 						theBoard.addToTrail(e.target);
@@ -334,7 +362,6 @@ $(function () {
 });
 
 /*
-- Bij 100? punten level omhoog + -> +- -> +-x -> +-x/
 - Hoe sneller je zetten hoe hoger je score
 - Firefox fix
 - Touch fix
