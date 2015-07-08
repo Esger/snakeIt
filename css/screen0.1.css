@@ -3,13 +3,10 @@
 *{
 	border:0;
 	margin:0;
-	/* font:normal 12px "Trebuchet MS", Arial, Helvetica, sans-serif;
-	   font-size: 13px; */
 	font-family: "Source Code Pro";
 	font-style: normal;
 	font-weight: 400;
 	font-size: 15px;
-	line-height:25px;
 }
 html, body{
 	overflow: hidden;
@@ -93,6 +90,10 @@ html, body{
 }
 .tile.error{
 	background-color: red;
+}
+.tile .coords{
+	font-size: 9px;
+	line-height: 8px;
 }
 #theScore, #menu{
 	position: absolute;

@@ -4,9 +4,7 @@ $(function () {
 
 	var theBoard = {
 			$theBoard : $('#theBoard'),
-			$theTiles : function() {
-				return $('.tile');
-			},
+			$theBackup : $(),
 			width : 9,
 			height : 9,
 			tileSize : 50,
@@ -40,14 +38,22 @@ $(function () {
 			},
 			
 			convertChar : function(tChar){
+				var theChar;
 				switch (tChar) {
-					case '-' : theChar = ('&ndash;');
+					case '-' : theChar = ('<b>&ndash;</b>');
 					break;
 					case '*' : theChar = ('&times;');
 					break;
 					default : theChar = tChar;
 				}
 				return theChar;
+			},
+			
+			//For debugging
+			updateTitle : function(atile) {
+				atile.find('.coords, br').remove();
+				atile.prepend('<span class="coords">'+atile.attr('data-x')+', '+atile.attr('data-y')+'</span><br>');
+				return atile;
 			},
 
 			newTile : function(tChar, tId, x, y) {
@@ -57,6 +63,7 @@ $(function () {
 					left : (x - this.posOffset) * this.tileSize + 'px',
 					top : - this.posOffset * this.tileSize + 'px'
 				});
+				//aTile = this.updateTitle(aTile);
 				return aTile;
 			},
 
@@ -64,15 +71,17 @@ $(function () {
 				var thisChar,
 					thisTile,
 					x, y;
-				theBoard.$theBoard.empty();
+				this.$theBoard.empty();
 				for (y = 1; y <= this.height; y+=1) {
 					for (x = 1; x <= this.width; x+=1) {
 						thisChar = this.randomChar();
-						thisTile = theBoard.newTile(thisChar, this.tileCount, x, y);
-						theBoard.$theBoard.append(thisTile);
+						thisTile = this.newTile(thisChar, this.tileCount, x, y);
+						this.$theBoard.append(thisTile);
 						this.tileCount+=1;
 					}
 				}
+				this.$theBackup = this.$theBoard.clone(false,true);
+				this.$theBackup.attr('id','theBackup');
 				this.score = 0;
 				if ($.cookie('score')) {
 					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
@@ -86,6 +95,11 @@ $(function () {
 					theBoard.fillBoard();
 					theBoard.dropTiles('offBoard');
 				});
+				$('#reload').on('click', function(){
+					theBoard.$theBoard.empty().append(theBoard.$theBackup.clone(false,true).children());
+					theBoard.dropTiles('offBoard');
+					theBoard.score = 0;
+				});
 			},
 
 			dropTiles : function(className){
@@ -94,7 +108,7 @@ $(function () {
 				$tiles.each(function(){
 					var $this = $(this).show(0);
 					dropTime = 300 + Math.random() * 300;
-					newY = ($this.attr('data-y') - theBoard.posOffset) * theBoard.tileSize;
+					newY = (parseInt($this.attr('data-y'),10) - theBoard.posOffset) * theBoard.tileSize;
 					$this.animate({top:newY},dropTime,'easeOutBounce').removeClass(className);
 				});
 			},
@@ -183,6 +197,7 @@ $(function () {
 					});
 					$this.attr('data-char',theBoard.randomChar());
 					$this.html(theBoard.convertChar($this.attr('data-char')));
+					//$this = theBoard.updateTitle($this);
 				});
 			},
 			
@@ -190,17 +205,25 @@ $(function () {
 				var $empty = $('.offBoard'),
 					sinkAllAbove = function(emptyX,emptyY) {
 						$('[data-x='+emptyX+']:not(.offBoard)').each(function(){
-							var $this = $(this), thisY;
-							if (parseInt($this.attr('data-y'),10) < emptyY) {
-								thisY = parseInt($this.attr('data-y'), 10);
+							var $this = $(this),
+								thisY = parseInt($this.attr('data-y'),10);
+							if (thisY < emptyY) {
 								$this.attr('data-y', thisY + 1);
 								$this.addClass('toSink');
+								//$this = theBoard.updateTitle($this);
 								//console.log(this);
 							}
 						});
+					},
+					sortByDataY = function(y1,y2){
+						var Ya = parseInt($(y1).attr('data-y'),10),
+							Yb = parseInt($(y2).attr('data-y'),10);
+						return ((Ya < Yb) ? -1 : ((Ya > Yb) ? 1 : 0));
 					};
+				$empty.sort(sortByDataY); // fixes nasty bug -> need to start at lowest empty Y
 				$empty.each(function(){
-					sinkAllAbove($(this).attr('data-x'),$(this).attr('data-y'));
+					var $this = $(this);
+					sinkAllAbove(parseInt($this.attr('data-x'),10),parseInt($this.attr('data-y'),10));
 				});
 				theBoard.dropTiles('toSink');				
 			},
@@ -211,13 +234,15 @@ $(function () {
 					setYdata = function(empty){
 						var y = 1;
 						$('.offBoard[data-x='+empty[0]+']').each(function(){
-							$(this).attr('data-y',y);
+							var $this = $(this);
+							$this.attr('data-y',y);
 							y+=1;
+							//$this = theBoard.updateTitle($this);
 						});
 					};
 				// Get columns from last trail
 				for (i=0; i<$toDrop.length; i+=1) {
-					x = $toDrop.eq(i).attr('data-x');
+					x = parseInt($toDrop.eq(i).attr('data-x'),10);
 					if (colums.indexOf(x) === -1) colums+=x+'|';
 				}
 				// Get tiles left in columns from trail
@@ -290,6 +315,8 @@ $(function () {
 });
 
 /*
-- 
+- Bij 100? punten level omhoog + -> +- -> +-x -> +-x/
 - Hoe sneller je zetten hoe hoger je score
+- Firefox fix
+- Touch fix
 */
