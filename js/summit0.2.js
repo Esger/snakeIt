@@ -13,10 +13,18 @@ $(function () {
 			tileCount : 1,
 			// Geen 0 want dan kun je 0*56789036543458987=0 doen -> vette score
 			numberChars : ['1','2','3','4','5','6','7','8','9','1','2','3','4','5','6','7','8','9'],
-			operatorChars : ['*','+','+','-','-','=','=','='],
+			level1Chars : ['+','+','=','='],
+			level2Chars : ['-','-','='],
+			level3Chars : ['*'],
 			allChars : function(){
-				return theBoard.numberChars.concat(theBoard.operatorChars);
+				switch (this.level) {
+					case 1 :  return this.numberChars.concat(this.level1Chars);
+					case 2 :  return this.numberChars.concat(this.level1Chars,this.level2Chars);
+					case 3 :  return this.numberChars.concat(this.level1Chars,this.level2Chars,this.level3Chars);
+					default : return this.numberChars.concat(this.level1Chars);
+				}
 			},
+			level : 1,
 			//trackStart : 'mousedown touchstart',
 			//trackEnter : 'mouseenter touchenter',
 			//trackEnd : 'mouseup touchend',
@@ -83,6 +91,7 @@ $(function () {
 				this.$theBackup = this.$theBoard.clone(false,true);
 				this.$theBackup.attr('id','theBackup');
 				this.score = 0;
+				this.level = 1;
 				if ($.cookie('score')) {
 					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
 				} else {
@@ -259,15 +268,25 @@ $(function () {
 				//console.log($('.offBoard').attr('data-y'));
 				this.dropTiles('offBoard');
 			},
+			
+			levelUp : function(){
+				if (this.score > 200) {
+					this.level = 3;
+				} else if (this.score > 100) {
+					this.level = 2;
+				}
+			},
 
 			addScore : function(){
-				var high, multiplier = Math.pow(2, (this.trail.length - 3));
-					this.score += this.trail.length * multiplier;
-					$('#yourScore').text(this.score);
-					high = $.cookie('score');
-					if (!high || (this.score > high)) {
-						$.cookie('score', this.score);
-					}
+				var high,
+					multiplier = Math.pow(2, (this.trail.length - 3));
+				this.score += this.trail.length * multiplier;
+				this.levelUp();
+				$('#yourScore').text(this.score);
+				high = $.cookie('score');
+				if (!high || (this.score > high)) {
+					$.cookie('score', this.score);
+				}
 			},
 
 			checkTrail : function(){

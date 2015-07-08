@@ -110,12 +110,12 @@ html, body{
 	margin-top: 0;
 }
 #menu a{
-	font:bold 18px/18px "Source Code Pro", "Courier New", Courier, monospace;
+	font:bold 18px/18px "Courier New", Courier, monospace;
 	color: #333;
 	text-decoration: none;
 }
 h1, h2, h3{
-	font:bold 18px/24px "Source Code Pro", "Courier New", Courier, monospace;
+	font:bold 18px/24px "Courier New", Courier, monospace;
 	font-weight: 900;
 	margin:30px 0 15px 0;
 	letter-spacing: 0;
@@ -123,7 +123,7 @@ h1, h2, h3{
 	letter-spacing: 0;
 }
 h1{
-	font:normal 36px/36px "Source Code Pro", "Courier New", Courier, monospace;
+	font:normal 36px/36px "Courier New", Courier, monospace;
 	margin: 10px 15px 10px 15px;
 }
 h3{
