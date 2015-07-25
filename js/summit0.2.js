@@ -32,9 +32,7 @@ $(function () {
 				}
 			},
 			level : 1,
-			//trackStart : 'mousedown touchstart',
-			//trackEnter : 'mouseenter touchenter',
-			//trackEnd : 'mouseup touchend',
+			isTouchDevice : 'ontouchstart' in document.documentElement,
 			trail : [],
 			empty : [],
 			score : 0,
@@ -332,17 +330,24 @@ $(function () {
 			},
 
 			handleTrail : function(){
-				theBoard.$theBoard.on('mousedown', '.tile', function(e){
-					if (e.preventDefault) e.preventDefault();
-					theBoard.addToTrail(e.target);
-					theBoard.$theBoard.on('mouseenter', '.tile', function(e){
-						theBoard.addToTrail(e.target);
+				if (this.isTouchDevice) {
+					theBoard.$theBoard.on('touchstart', '.tile', function(){
 					});
-				});
-				theBoard.$theBoard.on('mouseup', '.tile', function(){
-					theBoard.$theBoard.off('mouseenter', '.tile');
-					theBoard.checkTrail();
-				});
+					theBoard.$theBoard.on('touchend', '.tile', function(){
+					});
+				} else {
+					theBoard.$theBoard.on('mousedown', '.tile', function(e){
+						if (e.preventDefault) e.preventDefault(); // Firefox fix to prevent dragging the tiles
+						theBoard.addToTrail(e.target);
+						theBoard.$theBoard.on('mouseenter', '.tile', function(e){
+							theBoard.addToTrail(e.target);
+						});
+					});
+					theBoard.$theBoard.on('mouseup', '.tile', function(){
+						theBoard.$theBoard.off('mouseenter', '.tile');
+						theBoard.checkTrail();
+					});
+				}
 			},
 			
 			initBoard : function(){
@@ -362,7 +367,8 @@ $(function () {
 });
 
 /*
+- Aangeven als er geen zetten meer zijn
+- Kleiner bord op kleinere schermen
 - Hoe sneller je zetten hoe hoger je score
-- Firefox fix
-- Touch fix
+- Touch fix -> alleen tappen?
 */
