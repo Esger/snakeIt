@@ -198,10 +198,17 @@ $(function () {
 			},
 
 			correctString : function(str){
-				var	patt = /([\-+]?\d+([\-\+\*]\d)*){1}([=]([\-+]?\d+([\-\+\*]\d)*)){1}$/g,
+				var	//patt = /([\-+]?\d+([\-\+\*]\d)*){1}([=]([\-+]?\d+([\-\+\*]\d)*)){1}$/g,
+					patt1 = /[\-\+]?(\d+([\-\+\*\/]))*\d+/g,
+					patt2 = /[\-\+]?(\d+([\-\+\*\/]))*\d+[\-\+\*\/\d]*/g,
 					parts = str.split('=');
-				if (patt.test(str) && (parts.length === 2)) {
-					return (eval(parts[0]) === eval(parts[1]));
+				if (parts.length > 1) {
+					while (parts[1].length > 0) {
+						if (patt1.test(parts[0]) && patt2.test(parts[1])) {
+							if (eval(parts[0]) === eval(parts[1])) return true;
+						}
+						parts[1] = parts[1].substring(0, parts[1].length - 1);
+					}
 				}
 				return false;
 			},
@@ -333,31 +340,37 @@ $(function () {
 					this.sinkTiles();
 					this.dropTrailFromTop();
 					this.addScore();
-				} else {
+				} /*else {
 					this.blinkTiles();
 				}
 				this.trail = [];
-				$('.trail').text(this.getScore());
+				$('.trail').text(this.getScore());*/
+			},
+			
+			moveHead : function(x,y) {
+				var $theHead;
+				this.snakeHead.x+=x;
+				this.snakeHead.y+=y;
+				$theHead = $('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']');
+				$('.head').removeClass('head');
+				$theHead.addClass('head');
+				return $theHead.get(0);
 			},
 			
 			getTile : function(event){
-				var moveHead = function(x,y) {
-						theBoard.snakeHead.x+=x;
-						theBoard.snakeHead.y+=y;
-						$('.head').removeClass('head');
-						$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head');
-					};
-				switch (event.keyCode) {
-					case 49 : return moveHead(-1,1);  //1
-					case 50 : return moveHead(0,1);   //2
-					case 51 : return moveHead(1,1);   //3
-					case 52 : return moveHead(-1,0);  //4
-					case 54 : return moveHead(1,0);   //6
-					case 55 : return moveHead(-1,-1); //7
-					case 56 : return moveHead(0,-1);  //8
-					case 57 : return moveHead(1,-1);  //9
+				if (event.keyCode) {
+					switch (event.keyCode) {
+						case 49 : return theBoard.moveHead(-1,1);  //1
+						case 50 : return theBoard.moveHead(0,1);   //2
+						case 51 : return theBoard.moveHead(1,1);   //3
+						case 52 : return theBoard.moveHead(-1,0);  //4
+						case 54 : return theBoard.moveHead(1,0);   //6
+						case 55 : return theBoard.moveHead(-1,-1); //7
+						case 56 : return theBoard.moveHead(0,-1);  //8
+						case 57 : return theBoard.moveHead(1,-1);  //9
+					}
 				}
-				return false;
+				return theBoard.moveHead(0,0);
 			},
 
 			handleTrail : function(){
@@ -367,20 +380,22 @@ $(function () {
 					theBoard.$theBoard.on('touchend', '.tile', function(){
 					});
 				} else {
+					theBoard.addToTrail(theBoard.getTile(''));
 					$(document).on('keypress', function(e){
-						theBoard.getTile(e);
-					});
-					theBoard.$theBoard.on('mousedown', '.tile', function(e){
-						if (e.preventDefault) e.preventDefault(); // Firefox fix to prevent dragging the tiles
-						theBoard.addToTrail(e.target);
-						theBoard.$theBoard.on('mouseenter', '.tile', function(e){
-							theBoard.addToTrail(e.target);
-						});
-					});
-					theBoard.$theBoard.on('mouseup', '.tile', function(){
-						theBoard.$theBoard.off('mouseenter', '.tile');
+						theBoard.addToTrail(theBoard.getTile(e));
 						theBoard.checkTrail();
 					});
+					//theBoard.$theBoard.on('mousedown', '.tile', function(e){
+					//	if (e.preventDefault) e.preventDefault(); // Firefox fix to prevent dragging the tiles
+					//	theBoard.addToTrail(e.target);
+					//	theBoard.$theBoard.on('mouseenter', '.tile', function(e){
+					//		theBoard.addToTrail(e.target);
+					//	});
+					//});
+					//theBoard.$theBoard.on('mouseup', '.tile', function(){
+					//	theBoard.$theBoard.off('mouseenter', '.tile');
+					//	theBoard.checkTrail();
+					//});
 				}
 			},
 			
@@ -408,6 +423,8 @@ $(function () {
 - Hoe sneller je zetten hoe hoger je score
 - Touch fix -> alleen tappen?
 - snake door veld laten lopen? -> correcte strings -> slang krimpt, foute strings -> slang groeit
+- correcte deel van snake verwijderen
 - snake beweegt op jouw commando in 1 van de 8 richtingen.
 - snake begint weer op 1 lengte als blokjes vallen
+- lopen d.m.v. toetsen, klik en touchclick
 */
