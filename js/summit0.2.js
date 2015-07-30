@@ -143,6 +143,19 @@ $(function () {
 				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head');
 			},
 
+			setSnakeHead : function(){
+				var $newHead, newHeadId;
+				if (this.trail.length > 0) {
+					$newHead = this.trail[this.trail.length-1];
+					newHeadId = $newHead.attr('id');
+					$('#'+newHeadId).addClass('head');
+					this.snakeHead.x = parseInt($newHead.attr('data-x'),10);
+					this.snakeHead.y = parseInt($newHead.attr('data-y'),10);
+				} else {
+					this.initSnakeHead();
+				}
+			},
+
 			addToTrail : function(target){
 				var $prevTile,
 					$tile = $('#'+target.id),
@@ -198,38 +211,44 @@ $(function () {
 			},
 
 			correctString : function(str){
-				var	//patt = /([\-+]?\d+([\-\+\*]\d)*){1}([=]([\-+]?\d+([\-\+\*]\d)*)){1}$/g,
-					patt1 = /[\-\+]?(\d+([\-\+\*\/]))*\d+/g,
-					patt2 = /[\-\+]?(\d+([\-\+\*\/]))*\d+[\-\+\*\/\d]*/g,
+				var	patt = /^[\-\+]?(\d+[\-\+\*\/])*\d+$/,
 					parts = str.split('=');
 				if (parts.length > 1) {
-					while (parts[1].length > 0) {
-						if (patt1.test(parts[0]) && patt2.test(parts[1])) {
-							if (eval(parts[0]) === eval(parts[1])) return true;
+					while ((parts[0].length > 0) && parts[1].length > 0) {
+						if ((patt.test(parts[0])) && (patt.test(parts[1]))) {
+							if (eval(parts[0]) === eval(parts[1])) return parts[0].length + parts[1].length + 1;
 						}
-						parts[1] = parts[1].substring(0, parts[1].length - 1);
+						parts[0] = parts[0].substring(1, parts[0].length);
 					}
 				}
-				return false;
+				return 0;
+			},
+
+			cutTrail : function(lengthOfCorrectPart) {
+				var i, elId;
+				for (i=0; i<lengthOfCorrectPart; i+=1) {
+					elId = this.trail.pop().attr('id');
+					$('#'+elId).addClass('correct');
+				}
 			},
 
 			removeTiles : function(){
-				$('.inTrail').fadeOut();
+				$('.correct').fadeOut();
 			},
 
-			blinkTiles : function(){
-				var noTrail = function(){
-						$('.error').removeClass('error inTrail');
-					};
-				$('.inTrail').addClass('error');
-				setTimeout(noTrail,1000);
-			},
+			//blinkTiles : function(){
+			//	var noTrail = function(){
+			//			$('.error').removeClass('error inTrail');
+			//		};
+			//	$('.inTrail').addClass('error');
+			//	setTimeout(noTrail,1000);
+			//},
 
 			refillTrailAtTop : function(){
-				var $inTrail = $('.inTrail');
-				$inTrail.each(function(){
+				var $correctTiles = $('.correct');
+				$correctTiles.each(function(){
 					var $this = $(this);
-					$this.addClass('offBoard').removeClass('inTrail');
+					$this.addClass('offBoard').removeClass('correct inTrail head');
 					$this.css({
 						top : -theBoard.tileSize
 					});
@@ -332,10 +351,13 @@ $(function () {
 			},
 
 			checkTrail : function(){
-				var trailString = theBoard.getTrailString();
+				var trailString = theBoard.getTrailString(),
+					correctPartLength = this.correctString(trailString);
 				//console.log(trailString);
-				if (this.correctString(trailString)) {
+				if (correctPartLength > 0) {
+					this.cutTrail(correctPartLength);
 					this.removeTiles();
+					this.setSnakeHead();
 					this.refillTrailAtTop();
 					this.sinkTiles();
 					this.dropTrailFromTop();
@@ -422,9 +444,8 @@ $(function () {
 - Kleiner bord op kleinere schermen
 - Hoe sneller je zetten hoe hoger je score
 - Touch fix -> alleen tappen?
-- snake door veld laten lopen? -> correcte strings -> slang krimpt, foute strings -> slang groeit
-- correcte deel van snake verwijderen
+- Slang valt niet mee als blokjes vallen (slang terugzetten naar laatste positie) -> nieuwe waarden in slang zetten, ook opnieuw checken op correcte string
+- mag niet zichzelf raken, dan dood.
 - snake beweegt op jouw commando in 1 van de 8 richtingen.
-- snake begint weer op 1 lengte als blokjes vallen
 - lopen d.m.v. toetsen, klik en touchclick
 */
