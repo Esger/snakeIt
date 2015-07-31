@@ -35,6 +35,7 @@ $(function () {
 				x : 0,
 				y : 0
 			},
+			correctPartLength : 0,
 			level : 1,
 			isTouchDevice : 'ontouchstart' in document.documentElement,
 			trail : [],
@@ -143,6 +144,14 @@ $(function () {
 				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head');
 			},
 
+			getXfromAttr : function($tile){
+				return parseInt($tile.attr('data-x'),10);
+			},
+
+			getYfromAttr : function($tile){
+				return parseInt($tile.attr('data-y'),10);
+			},
+
 			setSnakeHead : function(){
 				var $newHead, newHeadId;
 				if (this.trail.length > 0) {
@@ -151,6 +160,20 @@ $(function () {
 					$('#'+newHeadId).addClass('head');
 					this.snakeHead.x = parseInt($newHead.attr('data-x'),10);
 					this.snakeHead.y = parseInt($newHead.attr('data-y'),10);
+				} else {
+					this.initSnakeHead();
+				}
+			},
+
+			repositionSnake : function(){
+				$('.inTrail').removeClass('inTrail head');
+				if (this.trail.length > 0) {
+					$.each(this.trail, function(){
+						$('.tile[data-x='+theBoard.getXfromAttr(this)+'][data-y='+theBoard.getYfromAttr(this)+']').addClass('inTrail');
+					});
+					this.snakeHead.x = theBoard.getXfromAttr(this.trail[this.trail.length-1]);
+					this.snakeHead.y = theBoard.getYfromAttr(this.trail[this.trail.length-1]);
+					$('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']').addClass('head inTrail');
 				} else {
 					this.initSnakeHead();
 				}
@@ -214,19 +237,19 @@ $(function () {
 				var	patt = /^[\-\+]?(\d+[\-\+\*\/])*\d+$/,
 					parts = str.split('=');
 				if (parts.length > 1) {
-					while ((parts[0].length > 0) && parts[1].length > 0) {
-						if ((patt.test(parts[0])) && (patt.test(parts[1]))) {
-							if (eval(parts[0]) === eval(parts[1])) return parts[0].length + parts[1].length + 1;
+					while ((parts[parts.length-1].length > 0) && parts[parts.length-2].length > 0) {
+						if ((patt.test(parts[parts.length-1])) && (patt.test(parts[parts.length-2]))) {
+							if (eval(parts[parts.length-1]) === eval(parts[parts.length-2])) return parts[parts.length-1].length + parts[parts.length-2].length + 1;
 						}
-						parts[0] = parts[0].substring(1, parts[0].length);
+						parts[parts.length-2] = parts[parts.length-2].substring(1, parts[parts.length-2].length);
 					}
 				}
 				return 0;
 			},
 
-			cutTrail : function(lengthOfCorrectPart) {
+			cutTrail : function() {
 				var i, elId;
-				for (i=0; i<lengthOfCorrectPart; i+=1) {
+				for (i=0; i<this.correctPartLength; i+=1) {
 					elId = this.trail.pop().attr('id');
 					$('#'+elId).addClass('correct');
 				}
@@ -333,9 +356,10 @@ $(function () {
 			},
 			
 			getScore : function(){
-				var score = this.trail.length,
-					multiplier = Math.pow(2, (this.trail.length - 3));
-					score = score * multiplier;
+				var score = this.correctPartLength,
+					multiplier = Math.pow(2, (this.correctPartLength - 3));
+				score = score * multiplier;
+				this.correctPartLength = 0;
 				return (score > 2) ? score : 0;
 			},
 
@@ -351,16 +375,17 @@ $(function () {
 			},
 
 			checkTrail : function(){
-				var trailString = theBoard.getTrailString(),
-					correctPartLength = this.correctString(trailString);
+				var trailString = theBoard.getTrailString();
+				this.correctPartLength = this.correctString(trailString);
 				//console.log(trailString);
-				if (correctPartLength > 0) {
-					this.cutTrail(correctPartLength);
+				if (this.correctPartLength > 0) {
+					this.cutTrail();
 					this.removeTiles();
-					this.setSnakeHead();
+					//this.setSnakeHead();
 					this.refillTrailAtTop();
 					this.sinkTiles();
 					this.dropTrailFromTop();
+					this.repositionSnake();
 					this.addScore();
 				} /*else {
 					this.blinkTiles();
@@ -440,12 +465,12 @@ $(function () {
 });
 
 /*
-- Aangeven als er geen zetten meer zijn
+- Aangeven als er geen zetten meer zijn (geen = tekens meer?)
 - Kleiner bord op kleinere schermen
 - Hoe sneller je zetten hoe hoger je score
 - Touch fix -> alleen tappen?
-- Slang valt niet mee als blokjes vallen (slang terugzetten naar laatste positie) -> nieuwe waarden in slang zetten, ook opnieuw checken op correcte string
-- mag niet zichzelf raken, dan dood.
+-  -> nieuwe waarden in slang zetten, ook opnieuw checken op correcte string
+- mag niet zichzelf of rand raken, dan dood.
 - snake beweegt op jouw commando in 1 van de 8 richtingen.
 - lopen d.m.v. toetsen, klik en touchclick
 */
