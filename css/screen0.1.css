@@ -85,8 +85,11 @@ html, body{
   -moz-border-radius: 10px;
   border-radius: 10px;
 }
+.tile[data-char='=']{
+	background-color: PapayaWhip;
+}
 .tile.number{
-	background-color: violet;
+	background-color: Lavender;
 	text-shadow: 0px 1px 1px #fff;
 }
 .tile.inTrail{

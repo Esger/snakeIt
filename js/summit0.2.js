@@ -109,15 +109,16 @@ $(function () {
 				this.score = 0;
 				this.level = 1;
 				if ($.cookie('score')) {
-					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>'+' trail:<span class="trail"></span>');
+					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
 				} else {
-					$('#theScore').html('High:0 score:<span id="yourScore">0</span>'+' trail:<span class="trail"></span>');
+					$('#theScore').html('High:0 score:<span id="yourScore">0</span>');
 				}
 			},
 
 			initButtons : function(){
 				$('#restart').on('click', function(){
 					theBoard.gameOver = false;
+					theBoard.tileCount = 1;
 					theBoard.fillBoard();
 					theBoard.dropTiles('offBoard');
 					theBoard.trail=[];
@@ -145,7 +146,7 @@ $(function () {
 				theBoard.snakeHead.x = Math.ceil(this.width / 2);
 				theBoard.snakeHead.y = Math.ceil(this.height / 2);
 				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head inTrail');
-				theBoard.addToTrail(theBoard.getTile(''));
+				theBoard.addToTrail(theBoard.getKeyTile(''));
 			},
 
 			getXfromAttr : function($tile){
@@ -167,6 +168,7 @@ $(function () {
 				if (this.trail.length > 0) {
 					$newHead = this.trail[this.trail.length-1];
 					newHeadId = $newHead.attr('id');
+					$('.head').removeClass('head');
 					$('#'+newHeadId).addClass('head');
 					this.snakeHead.x = this.getXfromAttr($newHead);
 					this.snakeHead.y = this.getYfromAttr($newHead);
@@ -226,7 +228,6 @@ $(function () {
 				if (adjacent($tile) && isNewTile(target)) {
 					$tile.addClass('inTrail');
 					this.trail.push($tile.clone());
-					$('.trail').text(this.getScore());
 					//console.log(this.trail);
 					return true;
 				} else {
@@ -435,7 +436,7 @@ $(function () {
 				this.$theBoard.append($('<h2 id="gameOver">Game Over</h2>'));
 			},
 			
-			getTile : function(event){
+			getKeyTile : function(event){
 				if (event.keyCode) {
 					switch (event.keyCode) {
 						case 49 : return theBoard.moveHead(-1,1);  //1
@@ -452,34 +453,40 @@ $(function () {
 			},
 
 			handleTrail : function(){
-				var $tile;
-				if (this.isTouchDevice) {
-					theBoard.$theBoard.on('touchstart', '.tile', function(){
-					});
-					theBoard.$theBoard.on('touchend', '.tile', function(){
-					});
-				} else {
-					$(document).on('keypress', function(e){
+				var handleClickTouch = function(el) {
+						var $tile;
 						if (!theBoard.gameOver) {
-							$tile = theBoard.getTile(e);
+							$tile = $(el);
+							if (!$tile.hasClass('inTrail')) {
+								if (theBoard.addToTrail($tile.get(0))) {
+									theBoard.setSnakeHead();
+									theBoard.checkTrail();
+								} else theBoard.endOfGame();
+							} else theBoard.endOfGame();
+						}
+					},
+					handleKeyPress = function(e) {
+						var $tile;
+						if (!theBoard.gameOver) {
+							$tile = theBoard.getKeyTile(e);
 							if ($tile) {
 								if (theBoard.addToTrail($tile)) {
 									theBoard.checkTrail();
 								} else theBoard.endOfGame();
 							} else theBoard.endOfGame();
 						}
+					};
+				if (this.isTouchDevice) {
+					$(document).on('touchstart', '.tile', function(e){
+						handleClickTouch(this);
 					});
-					//theBoard.$theBoard.on('mousedown', '.tile', function(e){
-					//	if (e.preventDefault) e.preventDefault(); // Firefox fix to prevent dragging the tiles
-					//	theBoard.addToTrail(e.target);
-					//	theBoard.$theBoard.on('mouseenter', '.tile', function(e){
-					//		theBoard.addToTrail(e.target);
-					//	});
-					//});
-					//theBoard.$theBoard.on('mouseup', '.tile', function(){
-					//	theBoard.$theBoard.off('mouseenter', '.tile');
-					//	theBoard.checkTrail();
-					//});
+				} else {
+					$(document).on('keypress', function(e){
+						handleKeyPress(e);
+					});
+					$(document).on('click', '.tile', function(e){
+						handleClickTouch(this);
+					});
 				}
 			},
 			
@@ -505,7 +512,4 @@ $(function () {
 - Aangeven als er geen zetten meer zijn (geen = tekens meer?)
 - Kleiner bord op kleinere schermen
 - Hoe sneller je zetten hoe hoger je score
-- Touch fix -> alleen tappen?
-- snake beweegt op jouw commando in 1 van de 8 richtingen.
-- lopen d.m.v. toetsen, klik en touchclick
 */
