@@ -32,8 +32,8 @@ $(function () {
 				}
 			},
 			snakeHead : {
-				x : 0,
-				y : 0
+				x : 5,
+				y : 5
 			},
 			correctPartLength : 0,
 			level : 1,
@@ -41,6 +41,7 @@ $(function () {
 			trail : [],
 			empty : [],
 			score : 0,
+			gameOver : false,
 
 			setBoardSize : function(){
 				var w = 463;
@@ -116,8 +117,10 @@ $(function () {
 
 			initButtons : function(){
 				$('#restart').on('click', function(){
+					theBoard.gameOver = false;
 					theBoard.fillBoard();
 					theBoard.dropTiles('offBoard');
+					theBoard.trail=[];
 					theBoard.initSnakeHead();
 				});
 				$('#reload').on('click', function(){
@@ -134,7 +137,7 @@ $(function () {
 					var $this = $(this).show(0);
 					dropTime = 300 + Math.random() * 300;
 					newY = (parseInt($this.attr('data-y'),10) - theBoard.posOffset) * theBoard.tileSize;
-					$this.animate({top:newY},dropTime,'easeOutBounce').removeClass(className);
+					$this.animate({top:newY},dropTime,'easeOutBounce').removeClass(className).addClass('tile');
 				});
 			},
 			
@@ -142,6 +145,7 @@ $(function () {
 				theBoard.snakeHead.x = Math.ceil(this.width / 2);
 				theBoard.snakeHead.y = Math.ceil(this.height / 2);
 				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head inTrail');
+				theBoard.addToTrail(theBoard.getTile(''));
 			},
 
 			getXfromAttr : function($tile){
@@ -187,7 +191,7 @@ $(function () {
 			},
 
 			addToTrail : function(target){
-				var $prevTile,
+				var //$prevTile,
 					$tile = $('#'+target.id),
 					adjacent = function($t) {
 						var dx, dy,
@@ -203,15 +207,15 @@ $(function () {
 					},
 					isNewTile = function(t){
 						var trailLength = theBoard.trail.length,
-							i, j, rl, removeFromTrail = [];
-						if (trailLength > 1) {
+							i; //, j, rl, removeFromTrail = [];
+						if (trailLength > 0) {
 							for (i=0; i<trailLength; i+=1) {
 								if (theBoard.trail[i][0].id === t.id) {
-									removeFromTrail = theBoard.trail.splice(i+1, trailLength-i-1);
-									rl = removeFromTrail.length;
-									for (j=0; j<rl; j+=1) {
-										$('#'+removeFromTrail[j][0].id).removeClass('inTrail');
-									}
+									//removeFromTrail = theBoard.trail.splice(i+1, trailLength-i-1);
+									//rl = removeFromTrail.length;
+									//for (j=0; j<rl; j+=1) {
+									//	$('#'+removeFromTrail[j][0].id).removeClass('inTrail');
+									//}
 									//console.log(theBoard.trail);
 									return false;
 								}
@@ -411,10 +415,24 @@ $(function () {
 				var $theHead;
 				this.snakeHead.x+=x;
 				this.snakeHead.y+=y;
-				$theHead = $('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']');
-				$('.head').removeClass('head');
-				$theHead.addClass('head');
-				return $theHead.get(0);
+				if ((this.snakeHead.x > 0) &&
+					(this.snakeHead.x <= this.width) &&
+					(this.snakeHead.y > 0) &&
+					(this.snakeHead.y <= this.height)) {
+					$theHead = $('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']');
+					$('.head').removeClass('head');
+					$theHead.addClass('head');
+					return $theHead.get(0);
+				} else return false;
+			},
+
+			endOfGame : function() {
+				$('.tile').each(function(){
+					$(this).attr('data-y',theBoard.height+2);
+				});
+				this.dropTiles('tile');
+				this.gameOver = true;
+				this.$theBoard.append($('<h2 id="gameOver">Game Over</h2>'));
 			},
 			
 			getTile : function(event){
@@ -434,16 +452,22 @@ $(function () {
 			},
 
 			handleTrail : function(){
+				var $tile;
 				if (this.isTouchDevice) {
 					theBoard.$theBoard.on('touchstart', '.tile', function(){
 					});
 					theBoard.$theBoard.on('touchend', '.tile', function(){
 					});
 				} else {
-					theBoard.addToTrail(theBoard.getTile(''));
 					$(document).on('keypress', function(e){
-						theBoard.addToTrail(theBoard.getTile(e));
-						theBoard.checkTrail();
+						if (!theBoard.gameOver) {
+							$tile = theBoard.getTile(e);
+							if ($tile) {
+								if (theBoard.addToTrail($tile)) {
+									theBoard.checkTrail();
+								} else theBoard.endOfGame();
+							} else theBoard.endOfGame();
+						}
 					});
 					//theBoard.$theBoard.on('mousedown', '.tile', function(e){
 					//	if (e.preventDefault) e.preventDefault(); // Firefox fix to prevent dragging the tiles
@@ -482,7 +506,6 @@ $(function () {
 - Kleiner bord op kleinere schermen
 - Hoe sneller je zetten hoe hoger je score
 - Touch fix -> alleen tappen?
-- mag niet zichzelf of rand raken, dan dood.
 - snake beweegt op jouw commando in 1 van de 8 richtingen.
 - lopen d.m.v. toetsen, klik en touchclick
 */
