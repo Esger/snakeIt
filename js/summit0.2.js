@@ -141,7 +141,7 @@ $(function () {
 			initSnakeHead : function(){
 				theBoard.snakeHead.x = Math.ceil(this.width / 2);
 				theBoard.snakeHead.y = Math.ceil(this.height / 2);
-				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head');
+				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head inTrail');
 			},
 
 			getXfromAttr : function($tile){
@@ -152,14 +152,21 @@ $(function () {
 				return parseInt($tile.attr('data-y'),10);
 			},
 
+			sortByDataY : function(y1,y2){
+				var Ya = parseInt($(y1).attr('data-y'),10),
+					Yb = parseInt($(y2).attr('data-y'),10);
+				return ((Ya < Yb) ? -1 : ((Ya > Yb) ? 1 : 0));
+			},
+
 			setSnakeHead : function(){
 				var $newHead, newHeadId;
 				if (this.trail.length > 0) {
 					$newHead = this.trail[this.trail.length-1];
 					newHeadId = $newHead.attr('id');
 					$('#'+newHeadId).addClass('head');
-					this.snakeHead.x = parseInt($newHead.attr('data-x'),10);
-					this.snakeHead.y = parseInt($newHead.attr('data-y'),10);
+					this.snakeHead.x = this.getXfromAttr($newHead);
+					this.snakeHead.y = this.getYfromAttr($newHead);
+					$('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']').addClass('head');
 				} else {
 					this.initSnakeHead();
 				}
@@ -171,8 +178,8 @@ $(function () {
 					$.each(this.trail, function(){
 						$('.tile[data-x='+theBoard.getXfromAttr(this)+'][data-y='+theBoard.getYfromAttr(this)+']').addClass('inTrail');
 					});
-					this.snakeHead.x = theBoard.getXfromAttr(this.trail[this.trail.length-1]);
-					this.snakeHead.y = theBoard.getYfromAttr(this.trail[this.trail.length-1]);
+					this.snakeHead.x = this.getXfromAttr(this.trail[this.trail.length-1]);
+					this.snakeHead.y = this.getYfromAttr(this.trail[this.trail.length-1]);
 					$('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']').addClass('head inTrail');
 				} else {
 					this.initSnakeHead();
@@ -299,18 +306,23 @@ $(function () {
 								//console.log(this);
 							}
 						});
-					},
-					sortByDataY = function(y1,y2){
-						var Ya = parseInt($(y1).attr('data-y'),10),
-							Yb = parseInt($(y2).attr('data-y'),10);
-						return ((Ya < Yb) ? -1 : ((Ya > Yb) ? 1 : 0));
 					};
-				$empty.sort(sortByDataY); // fixes nasty bug -> need to start at lowest empty Y
+				$empty.sort(this.sortByDataY); // fixes nasty bug -> need to start at lowest empty Y
 				$empty.each(function(){
 					var $this = $(this);
 					sinkAllAbove(parseInt($this.attr('data-x'),10),parseInt($this.attr('data-y'),10));
 				});
 				theBoard.dropTiles('toSink');				
+			},
+
+			sinkTrail : function(){
+				$.each(this.trail,function(){
+					var $this = $(this),
+						thisId = $this.attr('id'),
+						$thisTile = $('#'+thisId);
+					$this.attr('data-y', $thisTile.attr('data-y'));
+				});
+				console.log(theBoard.trail);
 			},
 			
 			dropTrailFromTop : function(){
@@ -381,11 +393,12 @@ $(function () {
 				if (this.correctPartLength > 0) {
 					this.cutTrail();
 					this.removeTiles();
-					//this.setSnakeHead();
 					this.refillTrailAtTop();
 					this.sinkTiles();
+					this.sinkTrail();
 					this.dropTrailFromTop();
-					this.repositionSnake();
+					this.setSnakeHead();
+					//this.repositionSnake();
 					this.addScore();
 				} /*else {
 					this.blinkTiles();
@@ -469,7 +482,6 @@ $(function () {
 - Kleiner bord op kleinere schermen
 - Hoe sneller je zetten hoe hoger je score
 - Touch fix -> alleen tappen?
--  -> nieuwe waarden in slang zetten, ook opnieuw checken op correcte string
 - mag niet zichzelf of rand raken, dan dood.
 - snake beweegt op jouw commando in 1 van de 8 richtingen.
 - lopen d.m.v. toetsen, klik en touchclick
