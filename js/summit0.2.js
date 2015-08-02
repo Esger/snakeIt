@@ -178,17 +178,26 @@ $(function () {
 				}
 			},
 
-			repositionSnake : function(){
-				$('.inTrail').removeClass('inTrail head');
-				if (this.trail.length > 0) {
-					$.each(this.trail, function(){
-						$('.tile[data-x='+theBoard.getXfromAttr(this)+'][data-y='+theBoard.getYfromAttr(this)+']').addClass('inTrail');
-					});
-					this.snakeHead.x = this.getXfromAttr(this.trail[this.trail.length-1]);
-					this.snakeHead.y = this.getYfromAttr(this.trail[this.trail.length-1]);
-					$('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']').addClass('head inTrail');
-				} else {
-					this.initSnakeHead();
+			//repositionSnake : function(){
+			//	$('.inTrail').removeClass('inTrail head');
+			//	if (this.trail.length > 0) {
+			//		$.each(this.trail, function(){
+			//			$('.tile[data-x='+theBoard.getXfromAttr(this)+'][data-y='+theBoard.getYfromAttr(this)+']').addClass('inTrail');
+			//		});
+			//		this.snakeHead.x = this.getXfromAttr(this.trail[this.trail.length-1]);
+			//		this.snakeHead.y = this.getYfromAttr(this.trail[this.trail.length-1]);
+			//		$('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']').addClass('head inTrail');
+			//	} else {
+			//		this.initSnakeHead();
+			//	}
+			//},
+			//
+			shortenSnakeTail : function() {
+				var tailId = '#'+this.trail[0][0].id;
+				if (this.trail.length > 1) {
+					$(tailId).removeClass('inTrail');
+					this.trail.shift();
+					console.log('one down');
 				}
 			},
 
@@ -403,8 +412,9 @@ $(function () {
 					this.sinkTrail();
 					this.dropTrailFromTop();
 					this.setSnakeHead();
-					//this.repositionSnake();
 					this.addScore();
+					this.shortenSnakeTail();
+					//this.repositionSnake();
 				} /*else {
 					this.blinkTiles();
 				}
@@ -434,6 +444,9 @@ $(function () {
 				this.dropTiles('tile');
 				this.gameOver = true;
 				this.$theBoard.append($('<h2 id="gameOver">Game Over</h2>'));
+				$('#gameOver').animate({
+					fontSize: '30px'
+				}, 700, 'easeOutElastic');
 			},
 			
 			getKeyTile : function(event){
@@ -478,6 +491,7 @@ $(function () {
 					};
 				if (this.isTouchDevice) {
 					$(document).on('touchstart', '.tile', function(e){
+						e.preventDefault();
 						handleClickTouch(this);
 					});
 				} else {
@@ -511,5 +525,9 @@ $(function () {
 /*
 - Aangeven als er geen zetten meer zijn (geen = tekens meer?)
 - Kleiner bord op kleinere schermen
+- Bord naar scherm schalen
+- Enter restart
+- Hoe hoger de vergelijkingswaarden, hoe hoger de score
+- Blink tiles weer gebruiken
 - Hoe sneller je zetten hoe hoger je score
 */
