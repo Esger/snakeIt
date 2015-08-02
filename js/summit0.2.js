@@ -532,7 +532,6 @@ $(function () {
 /*
 - Kleiner bord op kleinere schermen
 - Bord naar scherm schalen
-- Enter restart
 - Hoe hoger de vergelijkingswaarden, hoe hoger de score
 - Blink tiles weer gebruiken
 - Hoe sneller je zetten hoe hoger je score
