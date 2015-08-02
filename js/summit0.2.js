@@ -422,6 +422,10 @@ $(function () {
 				$('.trail').text(this.getScore());*/
 			},
 			
+			checkMoves : function(){
+				return ($('.tile[data-char="="]').not('.inTrail').length > 0);
+			},
+
 			moveHead : function(x,y) {
 				var $theHead;
 				this.snakeHead.x+=x;
@@ -486,6 +490,9 @@ $(function () {
 								if (theBoard.addToTrail($tile)) {
 									theBoard.checkTrail();
 								} else theBoard.endOfGame();
+								if (!theBoard.checkMoves()) {
+									theBoard.endOfGame();
+								}
 							} else theBoard.endOfGame();
 						}
 					};
@@ -523,7 +530,6 @@ $(function () {
 });
 
 /*
-- Aangeven als er geen zetten meer zijn (geen = tekens meer?)
 - Kleiner bord op kleinere schermen
 - Bord naar scherm schalen
 - Enter restart
