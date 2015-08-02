@@ -8,7 +8,7 @@ Click or tap tiles adjacent to the head of the snake (the green tile in the cent
 Alternatively you can steer the head of the snake with the numerical keys.
 Try to move the snake over numbers and 'operator' characters to form valid equations, like 1+1=2.
 The tiles are evaluated starting at the head, but they do not need to cover the whole length of the snake.
-When a valid equation is formed, this tiles disappear, shortening your snake. The last tile at the tail is cut off as well, if possible.
+When a valid equation is formed, these tiles disappear, shortening your snake. The last tile at the tail is cut off as well, if possible.
 The tiles above this will fall down and new random tiles will be inserted from the top.
 
 ## scoring
