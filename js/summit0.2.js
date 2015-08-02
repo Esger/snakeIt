@@ -96,6 +96,9 @@ $(function () {
 			fillBoard : function(){
 				var thisTile,
 					x, y;
+				this.score = 0;
+				this.level = 1;
+				this.tileCount = 1;
 				this.$theBoard.empty();
 				for (y = 1; y <= this.height; y+=1) {
 					for (x = 1; x <= this.width; x+=1) {
@@ -106,8 +109,6 @@ $(function () {
 				}
 				this.$theBackup = this.$theBoard.clone(false,true);
 				this.$theBackup.attr('id','theBackup');
-				this.score = 0;
-				this.level = 1;
 				if ($.cookie('score')) {
 					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
 				} else {
@@ -118,7 +119,6 @@ $(function () {
 			initButtons : function(){
 				$('#restart').on('click', function(){
 					theBoard.gameOver = false;
-					theBoard.tileCount = 1;
 					theBoard.fillBoard();
 					theBoard.dropTiles('offBoard');
 					theBoard.trail=[];
