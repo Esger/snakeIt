@@ -456,6 +456,7 @@ $(function () {
 			getKeyTile : function(event){
 				if (event.keyCode) {
 					switch (event.keyCode) {
+						case 13 : $('#restart').click();			//Enter
 						case 49 : return theBoard.moveHead(-1,1);  //1
 						case 50 : return theBoard.moveHead(0,1);   //2
 						case 51 : return theBoard.moveHead(1,1);   //3
@@ -483,9 +484,8 @@ $(function () {
 						}
 					},
 					handleKeyPress = function(e) {
-						var $tile;
+						var $tile = theBoard.getKeyTile(e);
 						if (!theBoard.gameOver) {
-							$tile = theBoard.getKeyTile(e);
 							if ($tile) {
 								if (theBoard.addToTrail($tile)) {
 									theBoard.checkTrail();
