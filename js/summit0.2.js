@@ -143,10 +143,12 @@ $(function () {
 			},
 			
 			initSnakeHead : function(){
+				var $tile;
 				theBoard.snakeHead.x = Math.ceil(this.width / 2);
 				theBoard.snakeHead.y = Math.ceil(this.height / 2);
-				$('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head inTrail');
+				$tile = $('.tile[data-x='+theBoard.snakeHead.x+'][data-y='+theBoard.snakeHead.y+']').addClass('head inTrail');
 				theBoard.addToTrail(theBoard.getKeyTile(''));
+				$('#snakeTrail').text($tile.attr('data-char'));
 			},
 
 			getXfromAttr : function($tile){
@@ -237,7 +239,6 @@ $(function () {
 				if (adjacent($tile) && isNewTile(target)) {
 					$tile.addClass('inTrail');
 					this.trail.push($tile.clone());
-					//console.log(this.trail);
 					return true;
 				} else {
 					return false;
@@ -316,8 +317,6 @@ $(function () {
 							if (thisY < emptyY) {
 								$this.attr('data-y', thisY + 1);
 								$this.addClass('toSink');
-								//$this = theBoard.updateTitle($this);
-								//console.log(this);
 							}
 						});
 					};
@@ -402,6 +401,7 @@ $(function () {
 
 			checkTrail : function(){
 				var trailString = theBoard.getTrailString();
+				$('#snakeTrail').text(trailString);
 				this.correctPartLength = this.correctString(trailString);
 				//console.log(trailString);
 				if (this.correctPartLength > 0) {
@@ -414,16 +414,11 @@ $(function () {
 					this.setSnakeHead();
 					this.addScore();
 					this.shortenSnakeTail();
-					//this.repositionSnake();
-				} /*else {
-					this.blinkTiles();
 				}
-				this.trail = [];
-				$('.trail').text(this.getScore());*/
 			},
 			
 			checkMoves : function(){
-				return ($('.tile[data-char="="]').not('.inTrail').length > 0);
+				return (this.$theBoard.find('.tile[data-char="="]').not('.inTrail').length > 0);
 			},
 
 			moveHead : function(x,y) {
@@ -476,6 +471,9 @@ $(function () {
 						if (!theBoard.gameOver) {
 							$tile = $(el);
 							if (!$tile.hasClass('inTrail')) {
+								if (!theBoard.checkMoves()) {
+									theBoard.endOfGame();
+								}
 								if (theBoard.addToTrail($tile.get(0))) {
 									theBoard.setSnakeHead();
 									theBoard.checkTrail();
@@ -487,12 +485,12 @@ $(function () {
 						var $tile = theBoard.getKeyTile(e);
 						if (!theBoard.gameOver) {
 							if ($tile) {
-								if (theBoard.addToTrail($tile)) {
-									theBoard.checkTrail();
-								} else theBoard.endOfGame();
 								if (!theBoard.checkMoves()) {
 									theBoard.endOfGame();
 								}
+								if (theBoard.addToTrail($tile)) {
+									theBoard.checkTrail();
+								} else theBoard.endOfGame();
 							} else theBoard.endOfGame();
 						}
 					};
