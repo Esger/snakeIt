@@ -129,6 +129,16 @@ $(function () {
 					theBoard.dropTiles('offBoard');
 					theBoard.score = 0;
 				});
+				$('#helpTile').on('click', function(){
+					$('#helpcontainer').animate({
+						top : '20px'
+					}, 700, 'easeOutElastic');
+				});
+				$('#helpcontainer').on('click', function(){
+					$(this).animate({
+						top : '-1000px'
+					}, 700, 'easeInBack');
+				});
 			},
 
 			dropTiles : function(className){
@@ -495,7 +505,7 @@ $(function () {
 						}
 					};
 				if (this.isTouchDevice) {
-					$(document).on('touchstart', '.tile', function(e){
+					$('#theBoard').on('touchstart', '.tile', function(e){
 						e.preventDefault();
 						handleClickTouch(this);
 					});
@@ -503,7 +513,7 @@ $(function () {
 					$(document).on('keypress', function(e){
 						handleKeyPress(e);
 					});
-					$(document).on('click', '.tile', function(e){
+					$('#theBoard').on('click', '.tile', function(e){
 						handleClickTouch(this);
 					});
 				}

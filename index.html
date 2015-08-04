@@ -4,16 +4,32 @@
 		<script src="http://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
 		<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js" type="text/javascript"></script>
 		<script async src="js/jquery.cookie.js" type="text/javascript"></script>
+		<script type="text/javascript" async="" src="http://www.google-analytics.com/ga.js"></script>
 		<link href="//fonts.googleapis.com/css?family=Source+Code Pro:200,300,400,500,600,700,900" rel="stylesheet" type="text/css">
 		<link rel="stylesheet" href="css/screen0.1.css" />
 		<title>SnakeIt - the math snake</title>
 	</head>
 	<body>
+		<a href="http://www.ashware.nl" target="_blank" class="r pushRightMore pushTop"><small>&copy;&thinsp;ashWare</small></a>
 		<div id="container">
 			<h3 id="menu"><a href="javascript:void(0);" id="restart">Restart</a>&emsp;<a href="javascript:void(0);" id="reload" class="hidden">Reload</a></h3>
 			<div id="theBoard"></div>
 			<h3 id="theScore" class="noPush">0</h3>
 			<h3 id="snakeTrail" class="noPush">&mdash;</h3>
+		</div>
+		<div id="helpTile" class="tile">?</div>
+		<div id="helpcontainer">
+			<h1>snakeIt</h1>
+			<p>A calculation game, combined with elements of Snake - the game we all know.</p>
+
+			<h2>game play</h2>
+			<p>Click or tap tiles adjacent to the head of the snake (the green tile in the center of the board). Alternatively you can steer the head of the snake with the numerical keys. Try to move the snake over numbers and 'operator' characters to form valid equations, like 1+1=2. The tiles are evaluated starting at the head, but they do not need to cover the whole length of the snake. When a valid equation is formed, these tiles disappear, shortening your snake. The last tile at the tail is cut off as well, if possible. The tiles above this will fall down and new random tiles will be inserted from the top.</p>
+
+			<h2>scoring</h2>
+			<p>The longer the valid part of the snake, the more point you score. Your high score will be kept in a browser-cookie.</p>
+
+			<h2>game end</h2>
+			<p>The game ends when you try to steer the snake out of the board (hit a wall) or when the snake hits itself. When no more '=' signs are available, the game ends as well.</p>
 		</div>
 		<script async src="js/summit0.2.js" type="text/javascript"></script>
 	</body>

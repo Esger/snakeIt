@@ -2,14 +2,13 @@
 /* CSS Document */
 *{
 	border:0;
-	margin:0;
 	font-family: "Source Code Pro";
 	font-style: normal;
 	font-weight: 400;
-	font-size: 15px;
 }
 html, body{
 	overflow: hidden;
+	margin:0;
 }
 .r{
 	float:right;
@@ -26,7 +25,17 @@ html, body{
 .noPush{
 	margin: 0 !important;
 }
+.pushTop{
+	margin-top: 10px;
+}
+.pushRight{
+	margin-right: 10px;
+}
+.pushRightMore{
+	margin-right: 20px;
+}
 #container{
+	font-size: 15px;
 	width: 463px;
 	position:relative;
 	margin: 50px auto;
@@ -65,7 +74,22 @@ html, body{
 	-moz-user-select: none; /* Firefox */
 	-ms-user-select: none; /* IE10+ */
 }
-.tile{
+#helpTile{
+	top: 10px !important;
+	left: 10px;
+}
+#helpContainer{
+	position: absolute;
+	top: -1000px;
+	left: 20%;
+	right: 20%;
+	padding: 20px;
+	z-index: 110;
+	background-color: white;
+	max-height: 100%;
+	overflow: auto;
+}
+.tile, #helpTile{
 	cursor: pointer;
 	display: inline-block;
 	position: absolute;
@@ -117,6 +141,7 @@ html, body{
 #theScore, #snakeTrail{
 	bottom: 5px;
 	text-shadow:0px 1px 1px #333;
+	overflow: hidden;
 }
 #theScore{
 	bottom: 24px;
@@ -135,26 +160,30 @@ html, body{
 	text-align: center;
 	font-size: 1px;
 }
-h1, h2, h3{
+h1, h2{
+	margin: 10px 0;
+}
+#container h1, #container h2, #container h3{
 	font:bold 18px/24px "Courier New", Courier, monospace;
 	font-weight: 900;
 	margin:30px 0 15px 0;
 	letter-spacing: 0;
 	text-shadow:0px 1px 1px #fff;
 	letter-spacing: 0;
+	margin: 0;
 }
-h1{
+#container h1{
 	font:normal 36px/36px "Courier New", Courier, monospace;
 	margin: 10px 15px 10px 15px;
 }
-h3{
+#container h3{
 	font-size: 18px;
 	text-transform: uppercase;
 	letter-spacing: 1px;
 	line-height: 18px;
 	color: white;
 }
-p{
+#container p{
 	margin-bottom:8px;
 }
 span{
