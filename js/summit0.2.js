@@ -40,7 +40,6 @@ $(function () {
 			isTouchDevice : 'ontouchstart' in document.documentElement,
 			trail : [],
 			empty : [],
-			score : 0,
 			gameOver : false,
 
 			setBoardSize : function(){
@@ -55,7 +54,7 @@ $(function () {
 				var all = this.allChars();
 				return all[Math.ceil(Math.random()*all.length)-1];
 			},
-			
+
 			convertChar : function(tChar){
 				var theChar;
 				switch (tChar) {
@@ -69,7 +68,7 @@ $(function () {
 				}
 				return theChar;
 			},
-			
+
 			//For debugging
 			updateTitle : function(atile) {
 				atile.find('.coords, br').remove();
@@ -96,8 +95,6 @@ $(function () {
 			fillBoard : function(){
 				var thisTile,
 					x, y;
-				this.score = 0;
-				this.level = 1;
 				this.tileCount = 1;
 				this.$theBoard.empty();
 				for (y = 1; y <= this.height; y+=1) {
@@ -107,12 +104,78 @@ $(function () {
 						this.tileCount+=1;
 					}
 				}
-				this.$theBackup = this.$theBoard.clone(false,true);
-				this.$theBackup.attr('id','theBackup');
-				if ($.cookie('score')) {
-					$('#theScore').html('High:'+$.cookie('score')+' score:<span id="yourScore">0</span>');
-				} else {
-					$('#theScore').html('High:0 score:<span id="yourScore">0</span>');
+			},
+			
+			score : {
+				last : 0,
+				prev : 0,
+				average : 0,
+				high : 0,
+				level : 0,
+				numberOfGames : 0,
+				getCookie : function(){
+					var fromCookie;
+					if ($.cookie('score')) {
+						fromCookie = $.cookie('score');
+						if (fromCookie.indexOf('|') > 0) {
+							fromCookie.split('|');
+						}
+						$.each(fromCookie, function(){
+							fromCookie[indexOf(this)] = this.split(':');
+						});
+						high = fromCookie[0][1];
+						average = fromCookie[1][1];
+						numberOfGames = fromCookie[2][1];
+					} else {
+						high = parseInt(fromCookie,10);
+					}
+				},
+				setCookie : function(){
+					var toCookie = 'high:'+high+'|average:'+average+'|games:'+numberOfGames;
+					$.cookie('score', toCookie);
+				},
+				getScore : function(){
+					var score = theBoard.correctPartLength,
+						multiplier = Math.pow(2, (theBoard.correctPartLength - 3));
+					score = score * multiplier;
+					theBoard.correctPartLength = 0;
+					return (score > 2) ? score : 0;
+				},
+				levelUp : function(){
+					if (last > 400) {
+						level = 4;
+					} else if (this.last > 200) {
+						level = 3;
+					} else if (last > 100) {
+						level = 2;
+					}
+				},
+				add : function(){
+					prev = last;
+					last += getScore();
+					high = (last > high) ? last : high;
+					levelUp();
+					update();
+					setCookie();
+				},
+				init : function(){
+					var $theScore = $('<h3 id="theScore" class="noPush"></h3>');
+					theBoard.$theBoard.after($theScore);
+					getCookie();
+					score = 0;
+					prev = 0;
+					level = 0;
+					$theScore.empty();
+					$theScore.append('High <span id="highScore">'+high+'</span> ');
+					$theScore.append('Avg. <span id="averageScore">'+average+'</span> ');
+					$theScore.append('Prev. <span id="prevScore">'+prev+'</span> ');
+					$theScore.append('Score <span id="yourScore">'+prev+'</span>');
+				},
+				update : function(){
+					$('#highScore').text(high);
+					$('#averageScore').text(average);
+					$('#prevScore').text(prev);
+					$('#yourScore').text(last);
 				}
 			},
 
@@ -121,13 +184,14 @@ $(function () {
 					theBoard.gameOver = false;
 					theBoard.fillBoard();
 					theBoard.dropTiles('offBoard');
+					theBoard.score.init();
 					theBoard.trail=[];
 					theBoard.initSnakeHead();
 				});
 				$('#reload').on('click', function(){
 					theBoard.$theBoard.empty().append(theBoard.$theBackup.clone(false,true).children());
 					theBoard.dropTiles('offBoard');
-					theBoard.score = 0;
+					theBoard.score.init();
 				});
 				$('#helpTile').on('click', function(){
 					$('#helpcontainer').animate({
@@ -214,7 +278,7 @@ $(function () {
 			},
 
 			addToTrail : function(target){
-				var //$prevTile,
+				var $prevTile,
 					$tile = $('#'+target.id),
 					adjacent = function($t) {
 						var dx, dy,
@@ -379,36 +443,7 @@ $(function () {
 				//console.log($('.offBoard').attr('data-y'));
 				this.dropTiles('offBoard');
 			},
-			
-			levelUp : function(){
-				if (this.score > 400) {
-					this.level = 4;
-				} else if (this.score > 200) {
-					this.level = 3;
-				} else if (this.score > 100) {
-					this.level = 2;
-				}
-			},
-			
-			getScore : function(){
-				var score = this.correctPartLength,
-					multiplier = Math.pow(2, (this.correctPartLength - 3));
-				score = score * multiplier;
-				this.correctPartLength = 0;
-				return (score > 2) ? score : 0;
-			},
-
-			addScore : function(){
-				var high;
-				this.score += this.getScore();
-				this.levelUp();
-				$('#yourScore').text(this.score);
-				high = $.cookie('score');
-				if (!high || (this.score > high)) {
-					$.cookie('score', this.score);
-				}
-			},
-
+						
 			checkTrail : function(){
 				var trailString = theBoard.getTrailString();
 				$('#snakeTrail').text(trailString);
@@ -422,7 +457,7 @@ $(function () {
 					this.sinkTrail();
 					this.dropTrailFromTop();
 					this.setSnakeHead();
-					this.addScore();
+					this.score.add();
 					this.shortenSnakeTail();
 				}
 			},
@@ -523,6 +558,7 @@ $(function () {
 				this.setBoardSize();
 				this.fillBoard();
 				this.dropTiles('offBoard');
+				this.score.init();
 				this.initButtons();
 				this.initSnakeHead();
 				this.handleTrail();
