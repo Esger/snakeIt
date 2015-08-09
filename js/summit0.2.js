@@ -109,29 +109,30 @@ $(function () {
 			score : {
 				last : 0,
 				prev : 0,
+				total : 0,
 				average : 0,
 				high : 0,
 				level : 0,
 				numberOfGames : 0,
 				getCookie : function(){
-					var fromCookie;
+					var fromCookie, i;
 					if ($.cookie('score')) {
 						fromCookie = $.cookie('score');
 						if (fromCookie.indexOf('|') > 0) {
-							fromCookie.split('|');
+							fromCookie = fromCookie.split('|');
+							for (i = 0; i < fromCookie.length; i+=1) {
+								fromCookie[i] = fromCookie[i].split(':');
+							}
+							this.high = parseInt(fromCookie[0][1],10);
+							this.average = parseInt(fromCookie[1][1],10);
+							this.numberOfGames = parseInt(fromCookie[2][1],10);
+						} else {
+							this.high = parseInt(fromCookie,10);
 						}
-						$.each(fromCookie, function(){
-							fromCookie[indexOf(this)] = this.split(':');
-						});
-						high = fromCookie[0][1];
-						average = fromCookie[1][1];
-						numberOfGames = fromCookie[2][1];
-					} else {
-						high = parseInt(fromCookie,10);
 					}
 				},
 				setCookie : function(){
-					var toCookie = 'high:'+high+'|average:'+average+'|games:'+numberOfGames;
+					var toCookie = 'high:'+this.high+'|average:'+this.average+'|games:'+this.numberOfGames;
 					$.cookie('score', toCookie);
 				},
 				getScore : function(){
@@ -142,46 +143,56 @@ $(function () {
 					return (score > 2) ? score : 0;
 				},
 				levelUp : function(){
-					if (last > 400) {
-						level = 4;
+					if (this.last > 400) {
+						this.level = 4;
 					} else if (this.last > 200) {
-						level = 3;
-					} else if (last > 100) {
-						level = 2;
+						this.level = 3;
+					} else if (this.last > 100) {
+						this.level = 2;
 					}
 				},
+				calcAverage : function() {
+					this.numberOfGames = this.numberOfGames + 1;
+					this.average = Math.round((this.total + this.average * (this.numberOfGames -1)) / this.numberOfGames);
+					this.setCookie();
+					this.update();
+				},
 				add : function(){
-					prev = last;
-					last += getScore();
-					high = (last > high) ? last : high;
-					levelUp();
-					update();
-					setCookie();
+					this.prev = this.last;
+					this.last = this.getScore();
+					this.total+=this.last;
+					this.high = (this.total > this.high) ? this.total : this.high;
+					this.levelUp();
+					this.update();
+					this.setCookie();
 				},
 				init : function(){
 					var $theScore = $('<h3 id="theScore" class="noPush"></h3>');
+					$('#theScore').remove();
 					theBoard.$theBoard.after($theScore);
-					getCookie();
-					score = 0;
-					prev = 0;
-					level = 0;
+					this.getCookie();
+					this.score = 0;
+					this.prev = 0;
+					this.total = 0;
+					this.level = 0;
 					$theScore.empty();
-					$theScore.append('High <span id="highScore">'+high+'</span> ');
-					$theScore.append('Avg. <span id="averageScore">'+average+'</span> ');
-					$theScore.append('Prev. <span id="prevScore">'+prev+'</span> ');
-					$theScore.append('Score <span id="yourScore">'+prev+'</span>');
+					$theScore.append('High:<span id="highScore">'+this.high+'</span> - ');
+					$theScore.append('Avg.:<span id="averageScore">'+this.average+'</span> - ');
+					$theScore.append('Prev.:<span id="prevScore">'+this.prev+'</span> - ');
+					$theScore.append('Score:<span id="yourScore">'+this.prev+'</span>');
 				},
 				update : function(){
-					$('#highScore').text(high);
-					$('#averageScore').text(average);
-					$('#prevScore').text(prev);
-					$('#yourScore').text(last);
+					$('#highScore').text(this.high);
+					$('#averageScore').text(this.average);
+					$('#prevScore').text(this.prev);
+					$('#yourScore').text(this.total);
 				}
 			},
 
 			initButtons : function(){
 				$('#restart').on('click', function(){
 					theBoard.gameOver = false;
+					theBoard.score.calcAverage();
 					theBoard.fillBoard();
 					theBoard.dropTiles('offBoard');
 					theBoard.score.init();
@@ -254,20 +265,6 @@ $(function () {
 				}
 			},
 
-			//repositionSnake : function(){
-			//	$('.inTrail').removeClass('inTrail head');
-			//	if (this.trail.length > 0) {
-			//		$.each(this.trail, function(){
-			//			$('.tile[data-x='+theBoard.getXfromAttr(this)+'][data-y='+theBoard.getYfromAttr(this)+']').addClass('inTrail');
-			//		});
-			//		this.snakeHead.x = this.getXfromAttr(this.trail[this.trail.length-1]);
-			//		this.snakeHead.y = this.getYfromAttr(this.trail[this.trail.length-1]);
-			//		$('.tile[data-x='+this.snakeHead.x+'][data-y='+this.snakeHead.y+']').addClass('head inTrail');
-			//	} else {
-			//		this.initSnakeHead();
-			//	}
-			//},
-			//
 			shortenSnakeTail : function() {
 				var tailId = '#'+this.trail[0][0].id;
 				if (this.trail.length > 1) {
@@ -378,7 +375,6 @@ $(function () {
 					} else {
 						$this.removeClass('number');
 					}
-					//$this = theBoard.updateTitle($this);
 				});
 			},
 			
@@ -409,7 +405,7 @@ $(function () {
 						$thisTile = $('#'+thisId);
 					$this.attr('data-y', $thisTile.attr('data-y'));
 				});
-				console.log(theBoard.trail);
+				//console.log(theBoard.trail);
 			},
 			
 			dropTrailFromTop : function(){
@@ -421,7 +417,6 @@ $(function () {
 							var $this = $(this);
 							$this.attr('data-y',y);
 							y+=1;
-							//$this = theBoard.updateTitle($this);
 						});
 					};
 				// Get columns from last trail
@@ -482,6 +477,7 @@ $(function () {
 			},
 
 			endOfGame : function() {
+				this.score.calcAverage();
 				$('.tile').each(function(){
 					$(this).attr('data-y',theBoard.height+2);
 				});
