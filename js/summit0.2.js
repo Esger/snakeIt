@@ -270,7 +270,7 @@ $(function () {
 				if (this.trail.length > 1) {
 					$(tailId).removeClass('inTrail');
 					this.trail.shift();
-					console.log('one down');
+					//console.log('one down');
 				}
 			},
 
@@ -458,7 +458,7 @@ $(function () {
 			},
 			
 			checkMoves : function(){
-				return (this.$theBoard.find('.tile[data-char="="]').not('.inTrail').length > 0);
+				return (this.$theBoard.find('.tile[data-char="="]').length > 0);
 			},
 
 			moveHead : function(x,y) {
@@ -493,6 +493,7 @@ $(function () {
 				if (event.keyCode) {
 					switch (event.keyCode) {
 						case 13 : $('#restart').click();			//Enter
+							break;
 						case 49 : return theBoard.moveHead(-1,1);  //1
 						case 50 : return theBoard.moveHead(0,1);   //2
 						case 51 : return theBoard.moveHead(1,1);   //3
@@ -512,13 +513,13 @@ $(function () {
 						if (!theBoard.gameOver) {
 							$tile = $(el);
 							if (!$tile.hasClass('inTrail')) {
-								if (!theBoard.checkMoves()) {
-									theBoard.endOfGame();
-								}
 								if (theBoard.addToTrail($tile.get(0))) {
 									theBoard.setSnakeHead();
 									theBoard.checkTrail();
 								} else theBoard.endOfGame();
+								if (!theBoard.checkMoves()) {
+									theBoard.endOfGame();
+								}
 							} else theBoard.endOfGame();
 						}
 					},
@@ -526,12 +527,12 @@ $(function () {
 						var $tile = theBoard.getKeyTile(e);
 						if (!theBoard.gameOver) {
 							if ($tile) {
-								if (!theBoard.checkMoves()) {
-									theBoard.endOfGame();
-								}
 								if (theBoard.addToTrail($tile)) {
 									theBoard.checkTrail();
 								} else theBoard.endOfGame();
+								if (!theBoard.checkMoves()) {
+									theBoard.endOfGame();
+								}
 							} else theBoard.endOfGame();
 						}
 					};
